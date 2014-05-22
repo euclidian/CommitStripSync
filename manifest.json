@@ -1,0 +1,29 @@
+{
+  "manifest_version": 2,
+
+  "name": "CommitStrip Updater",
+  "description": "Insert short description here.",
+  "version": "1.0",
+  "icons" : {
+      "16"  : "images/icon-32.png",
+      "48"  : "images/icon-32.png",
+      "128" : "images/icon-32.png"
+  },
+  "homepage_url" : "http://www.phinisistudio.com",
+  "background" :{
+      "scripts" : ["js/BSync.js"]
+  },
+  "permissions" : [
+        "http://www.commitstrip.com/*",
+        "storage",
+        "tabs"
+  ],
+  "content_scripts" : [{
+        "matches" : ["http://www.commitstrip.com/en/","http://www.commitstrip.com/en/*"],
+        "js" : ["js/jquery.js","js/contentScript.js"]
+  }],
+  "browser_action": {
+    "default_icon": "images/icon-32.png",
+    "default_popup": "popup.html"
+  }
+}
