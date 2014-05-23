@@ -5,12 +5,45 @@
  */
 
 $(document).ready(function() {
-    fetch_commit();
+    fetchLastSeen();
+    fetchLastPublished();
+    $('#markAsSeenBtn').click(function(){
+        markAsSeen();        
+    });
+    $('#continueBtn').click(function(){
+        var href = $('#continueBtn').attr('href');
+        if(href === '#'){
+            return;
+        }else{
+            chrome.tabs.create({url : href});
+        }
+    });
 });
 
-function fetch_commit() {    
+function fetchLastSeen() {    
     chrome.extension.sendRequest({'action': 'fetch_last_seen'},
     function(response) {        
         $('#latest_read').html(response.last_seen);        
+        var lastSeen = parseInt(response.last_seen);                
+        if(lastSeen > 1){
+            nextSeen = lastSeen - 1;            
+            $('#continueBtn').attr('href','http://www.commitstrip.com/en/page/'+nextSeen+"/");
+        }else{
+            nextSeen = 0;
+            $('#continueBtn').attr('href','http://www.commitstrip.com/en/');
+        }                
     });    
+}
+
+function fetchLastPublished(){
+    chrome.extension.sendRequest({'action': 'fetch_last_published'},
+    function(response) {                
+        
+    });    
+}
+
+function markAsSeen(){
+    chrome.extension.sendRequest({action : 'mark_as_seen'},
+        function(response){                
+        });
 }

@@ -11,12 +11,13 @@
   },
   "homepage_url" : "http://www.phinisistudio.com",
   "background" :{
-      "scripts" : ["js/BSync.js"]
+      "page" : "bgWork.html"
   },
   "permissions" : [
         "http://www.commitstrip.com/*",
         "storage",
-        "tabs"
+        "tabs",
+        "notifications"
   ],
   "content_scripts" : [{
         "matches" : ["http://www.commitstrip.com/en/","http://www.commitstrip.com/en/*"],
@@ -25,5 +26,8 @@
   "browser_action": {
     "default_icon": "images/icon-32.png",
     "default_popup": "popup.html"
-  }
+  },
+  "web_accessible_resources":[
+      "images/icon-32.png"
+  ]
 }
