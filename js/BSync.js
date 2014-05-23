@@ -111,6 +111,9 @@ function onRequest(request, sender, callback) {
                 }
             }
         });
+    } else if(request.action === 'mark_as_seen'){
+        saveLastSeen(1);
+        setBadgeNumber(0);
     }
 }
 
@@ -144,14 +147,15 @@ function commitStripFeedLastPublished() {
                 //jika LastPublished > saved LastPublished, berarti ada halaman baru
                 if (currLastPublished == null) {                    
                     var numLastPublished = parseInt(lastPublished);
-                    saveLastPublished(lastPublished);
+                    saveLastPublished((numLastPublished+1)+'');
+                    setBadgeNumber(numLastPublished + 1);
                     if (response.last_seen == null) {
-                        saveLastSeen(lastPublished);
+                        saveLastSeen((numLastPublished+1)+'');
                     }
                 } else {
                     var numLastPublished = parseInt(lastPublished);
                     var numCurrLastPublished = parseInt(currLastPublished);                    
-                    if (numLastPublished >= numCurrLastPublished) {
+                    if (numLastPublished > numCurrLastPublished) {
                         //ambil selisih, trus tambahkan ke last seen
                         var diff = numLastPublished - numCurrLastPublished;
                         var currLastSeen = parseInt(response.last_seen);

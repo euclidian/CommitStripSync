@@ -46,4 +46,5 @@ function markAsSeen(){
     chrome.extension.sendRequest({action : 'mark_as_seen'},
         function(response){                
         });
+    $('#latest_read').html(1); 
 }
