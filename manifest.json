@@ -2,7 +2,7 @@
   "manifest_version": 2,
 
   "name": "CommitStrip Updater",
-  "description": "Insert short description here.",
+  "description": "Stay tuned to CommitStrip (www.commitstrip.com/en/)",
   "version": "1.0",
   "icons" : {
       "16"  : "images/icon-32.png",

@@ -7,18 +7,31 @@
 
 var lastPublishedKey = 'last_page_published';
 var lastSeenKey = 'last_seen';
+var debug = false;
+
+function checkWriteQuotaError() {    
+    if (chrome.extension.lastError != null) {                
+        if (chrome.extension.lastError.message.indexOf('MAX_SUSTAINED_WRITE_OPERATIONS_PER_MINUTE') > -1) {
+            console.log('error quota');
+            return true;
+        }
+    }
+
+    return false;
+}
 function saveLastSeen(page_id) {
-    chrome.storage.sync.set({last_seen: page_id}, function() {
-        console.log(chrome.extension.lastError);
-        console.log('Message seen');
-    });
+    if (!checkWriteQuotaError()) {
+        chrome.storage.sync.set({last_seen: page_id}, function() {            
+        });
+    }
 }
 
 function saveLastPublished(page_id) {
-    chrome.storage.sync.set({last_page_published: page_id}, function() {
-        console.log(chrome.extension.lastError);
-        console.log("Published save");
-    });
+    if (!checkWriteQuotaError()) {
+        chrome.storage.sync.set({last_page_published: page_id}, function() {            
+        });
+    }
+
 }
 
 function getLastSeen(callback) {
@@ -28,8 +41,7 @@ function getLastSeen(callback) {
 }
 
 function fetchLastSeen(callback) {
-    chrome.storage.sync.get([lastSeenKey, lastPublishedKey], function(result) {
-        console.log(result);
+    chrome.storage.sync.get([lastSeenKey, lastPublishedKey], function(result) {        
         var lastSeenPage = result.last_seen;
         if (lastSeenPage == null) {
         } else {
@@ -81,18 +93,19 @@ function onRequest(request, sender, callback) {
             var lastSeenPage = result.last_seen;
             if (currUrl.indexOf("http://www.commitstrip.com/en") > -1) {
                 var strings = currUrl.replace("http://", '').split('/');
-                if (strings.length < 3) {
+                if (strings.length <= 3) {
                     //berarti di halaman pertama
-                    if (lastSeenPage == null || lastSeenPage == 0) {
-                        saveLastSeen(1);
-                    }
+                    saveLastSeen(1);
+                    setBadgeNumber(null);
                 } else {
                     var pageId = strings[3];
                     if (lastSeenPage == null || lastSeenPage == 0) {
                         saveLastSeen(pageId);
+                        setBadgeNumber(pageId);
                     } else {
                         if (lastSeenPage > pageId) {
                             saveLastSeen(pageId);
+                            setBadgeNumber(pageId);
                         }
                     }
                 }
@@ -101,32 +114,35 @@ function onRequest(request, sender, callback) {
     }
 }
 
+function setBadgeNumber(number) {
+    if (number == null || number == 0 | number == 1) {
+        chrome.browserAction.setBadgeText({text: ''});    
+    } else {
+        var currLastSeen = parseInt(number);
+        chrome.browserAction.setBadgeText({text: (currLastSeen - 1) + ''});
+    }
+}
+
 ////wire up commit strip popup listener
 chrome.extension.onRequest.addListener(onRequest);
 
-$(document).ready(function() {
+$(document).ready(function() {    
     commitStripFeedLastPublished();
 });
 
-function commitStripFeedLastPublished() {
+function commitStripFeedLastPublished() {    
     $.ajax({
         type: 'GET',
         url: 'http://www.commitstrip.com/en/page/3/',
         success: function(successResponse, status) {
             var lastPage = $('.last', successResponse).first().attr('href');
-            var lastPublished = lastPage.split('/')[5];
-            console.log(lastPublished);
-            chrome.storage.sync.get(null, function(response) {
-                var allKeys = Object.keys(response);
-                console.log(allKeys);
-                console.log(response);
-                console.log(response.last_page_published == null ? 'yes' : 'no');
+            var lastPublished = lastPage.split('/')[5];            
+            chrome.storage.sync.get([lastSeenKey, lastPublishedKey], function(response) {
                 var currLastPublished = response.last_page_published;
                 //commitstrip memiliki sistem blog, yang terbaru ada di halaman pertama
                 //jadi ambil data last published, trus cek dengan last_published yang di save
                 //jika LastPublished > saved LastPublished, berarti ada halaman baru
-                if (currLastPublished == null) {
-                    console.log('masuk sini');
+                if (currLastPublished == null) {                    
                     var numLastPublished = parseInt(lastPublished);
                     saveLastPublished(lastPublished);
                     if (response.last_seen == null) {
@@ -134,8 +150,7 @@ function commitStripFeedLastPublished() {
                     }
                 } else {
                     var numLastPublished = parseInt(lastPublished);
-                    var numCurrLastPublished = parseInt(currLastPublished);
-                    console.log(numLastPublished + ' , ' + numCurrLastPublished);
+                    var numCurrLastPublished = parseInt(currLastPublished);                    
                     if (numLastPublished >= numCurrLastPublished) {
                         //ambil selisih, trus tambahkan ke last seen
                         var diff = numLastPublished - numCurrLastPublished;
@@ -143,32 +158,44 @@ function commitStripFeedLastPublished() {
                         currLastSeen += diff;
                         saveLastSeen(currLastSeen + '');
                         //update badge
-                        chrome.browserAction.setBadgeText({text: (currLastSeen - 1) + ''});
-                        saveLastPublished((numLastPublished) + '');
+                        setBadgeNumber(currLastSeen - 1);
+                        saveLastPublished((numLastPublished - 1) + '');
                         //show notification
-                        var notification = webkitNotifications.createNotification(
-                                'images/icon-32.png',
-                                'New Strip!!',
-                                diff + ' New Strip On Commitstrip'
-                                );
-                        notification.addEventListener('click', function() {
-                            notification.cancel();
-                            if (diff > 1) {
-                                window.open('http://www.commitstrip.com/en/page/' + diff + '/');
+                        var opt = {
+                            type: "basic",
+                            title: "New Strip!!",
+                            message: diff + ' New Strip On Commitstrip',
+                            iconUrl: "images/icon-32.png"
+                        };
+                        chrome.notifications.create("commitstrtip-" + diff, opt, function(notifId) {
+
+                        });
+                        chrome.notifications.onClicked.addListener(function(notifId) {
+                            chrome.notifications.clear(notifId, function(response) {
+
+                            });
+                            var pageDiff = parseInt(notifId.split('-')[1]);
+                            if (pageDiff > 1) {
+                                window.open('http://www.commitstrip.com/en/page/' + pageDiff + '/');
                             } else {
                                 window.open('http://www.commitstrip.com/en/');
                             }
+
                         });
-                        notification.show();
                     }
                 }
-                setTimeout(commitStripFeedLastPublished, 1000 * 5);
             });
         },
         error: function(errorResponse, status) {
-            setTimeout(commitStripFeedLastPublished, 1000 * 15);
         }
     });
+    setTimeout(commitStripFeedLastPublished, 1000 * 60 * 1);
+}
+
+function log(data){
+    if(debug){
+        console.log(data);
+    }
 }
 
 //function onMessage(request, sender, callback) {
