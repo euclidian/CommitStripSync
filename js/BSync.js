@@ -51,12 +51,12 @@ function fetchLastSeen(callback) {
 }
 
 function fetchLastPublished(callback) {
-    chrome.storage.sync.get(lastPublishedKey, function(result) {
+    chrome.storage.sync.get([lastSeenKey,lastPublishedKey], function(result) {
         var lastPublished = result.last_page_published;
         if (lastPublished == null) {
             var lastPublished = 1;
             saveLastPublished(lastPublished);
-            callback({last_page_published: lastPublished});
+            callback({last_page_published: lastPublished, last_seen:lastPublished});
         } else {
             callback(result);
         }
