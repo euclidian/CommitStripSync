@@ -147,7 +147,7 @@ function commitStripFeedLastPublished() {
                 //jika LastPublished > saved LastPublished, berarti ada halaman baru
                 if (currLastPublished == null) {                    
                     var numLastPublished = parseInt(lastPublished);
-                    saveLastPublished((numLastPublished+1)+'');
+                    saveLastPublished((numLastPublished)+'');
                     setBadgeNumber(numLastPublished + 1);
                     if (response.last_seen == null) {
                         saveLastSeen((numLastPublished+1)+'');
