@@ -193,7 +193,7 @@ function commitStripFeedLastPublished() {
         error: function(errorResponse, status) {
         }
     });
-    setTimeout(commitStripFeedLastPublished, 1000 * 60 * 1);
+    setTimeout(commitStripFeedLastPublished, 1000 * 60 * 5);
 }
 
 function log(data){
