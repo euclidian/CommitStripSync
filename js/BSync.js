@@ -113,7 +113,7 @@ function onRequest(request, sender, callback) {
         });
     } else if(request.action === 'mark_as_seen'){
         saveLastSeen(1);
-        setBadgeNumber(0);
+        setBadgeNumber(null);
     }
 }
 
@@ -163,7 +163,7 @@ function commitStripFeedLastPublished() {
                         saveLastSeen(currLastSeen + '');
                         //update badge
                         setBadgeNumber(currLastSeen - 1);
-                        saveLastPublished((numLastPublished - 1) + '');
+                        saveLastPublished((numLastPublished) + '');
                         //show notification
                         var opt = {
                             type: "basic",
