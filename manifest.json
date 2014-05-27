@@ -3,7 +3,7 @@
 
   "name": "CommitStrip Feed",
   "description": "Stay tuned to CommitStrip(www.commitstrip.com/en/)",
-  "version": "1.0",
+  "version": "1.0.2",
   "icons" : {
       "16"  : "images/icon-32.png",
       "48"  : "images/icon-32.png",
